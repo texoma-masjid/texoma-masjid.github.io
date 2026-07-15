@@ -175,9 +175,17 @@ function StarRow({ bg="#F1F2F8" }) {
 }
 
 /* ── Google Calendar ───────────────────────────────────────────────────
-   Fill in the public calendar's ID and a Google API key with the Calendar
-   API enabled. The calendar must be set to "public" for the key to read it. */
-const GCAL = { API_KEY:"AIzaSyBdeGx5AQ3BOJXvt5AbpTcRmv8woQH2l-g", CALENDAR_ID:"6a0d68de6cc4ba47bc83b926e5c04340b26245c3a298a4504753f345dc51d977@group.calendar.google.com" };
+   API_KEY comes from the VITE_GCAL_API_KEY env var (see .env.example): set it
+   in .env.local for local dev and as a GitHub Actions secret for the deploy,
+   so the real key stays out of the committed source. NOTE: a browser API key
+   is still visible in the shipped bundle — protect it by restricting the key
+   in Google Cloud (HTTP-referrer + Calendar API only), not by hiding it.
+   The calendar must be set to "public" for the key to read it; the calendar
+   ID is not secret, so it stays inline. */
+const GCAL = {
+  API_KEY: import.meta.env.VITE_GCAL_API_KEY || "",
+  CALENDAR_ID: "6a0d68de6cc4ba47bc83b926e5c04340b26245c3a298a4504753f345dc51d977@group.calendar.google.com",
+};
 
 /* ── Formspree (volunteer + contact forms) ────────────────────────────────
    Forms created at https://formspree.io — submissions arrive by email and in
@@ -374,7 +382,7 @@ function Calendar({ events }) {
 /* ── MAIN ─────────────────────────────────────────────────────────────── */
 export default function ICTExoma() {
   const [events,  setEvents] =useState([]);
-  const [calSt,   setCalSt]  =useState("loading");
+  const [calSt,   setCalSt]  =useState(GCAL.API_KEY ? "loading" : "error");
   const [prayers, setPrayers]=useState(DEFAULT_PRAYERS);
   const [dAmt,    setDAmt]   =useState("$50");
   const [donateOpen,setDonateOpen]=useState(false);
@@ -438,6 +446,7 @@ export default function ICTExoma() {
   },[donateOpen]);
 
   useEffect(()=>{
+    if(!GCAL.API_KEY) return; // no key configured (e.g. secret missing at build); calSt already "error"
     const now=new Date().toISOString();
     fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GCAL.CALENDAR_ID)}/events?key=${GCAL.API_KEY}&singleEvents=true&orderBy=startTime&timeMin=${now}&maxResults=50`)
       .then(r=>{ if(!r.ok) throw new Error("Calendar request failed"); return r.json(); })
