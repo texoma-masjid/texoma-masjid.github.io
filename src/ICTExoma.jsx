@@ -19,9 +19,29 @@ const HEAD_INJECT = `
     --moon:#EDE8D6; --cream:#F1F2F8; --creamD:#E6E9F4;
     --mist:#FAFAFE; --ink:#1A1F38; --inkL:#6B7290;
   }
-  html { scroll-behavior:smooth; }
-  body { font-family:'Jost',sans-serif; background:var(--cream); color:var(--ink); overflow-x:hidden; }
+  *,*::before,*::after { box-sizing:border-box; }
+  html { scroll-behavior:smooth; overflow-x:hidden; }
+  html,body { margin:0; padding:0; width:100%; max-width:100%; }
+  body { font-family:'Jost',sans-serif; background:var(--cream); color:var(--ink); }
+  img { max-width:100%; }
   ::selection { background:#8E9ED655; }
+  /* ── Responsive helpers (mobile ≤860px) ───────────────────────────── */
+  .nav-burger { display:none; }
+  .nav-mobile-menu { display:none; }
+  @media (max-width:860px){
+    .nav-links { display:none !important; }
+    .nav-burger { display:flex !important; }
+    .nav-mobile-menu { display:flex !important; }
+    .resp-2col { grid-template-columns:1fr !important; gap:44px !important; }
+    .resp-svc  { grid-template-columns:1fr !important; gap:4px !important; }
+    .resp-cal  { grid-template-columns:1fr !important; }
+    .resp-foot { grid-template-columns:1fr 1fr !important; gap:32px !important; }
+    .hero-inner { padding:110px 24px 70px !important; }
+  }
+  @media (max-width:480px){
+    .resp-foot { grid-template-columns:1fr !important; }
+    .resp-2fields { grid-template-columns:1fr !important; }
+  }
   .night-texture {
     background-image:
       radial-gradient(circle at 18% 30%, rgba(196,204,230,.05) 0%, transparent 8%),
@@ -111,7 +131,7 @@ function StarDivider({ topBg="#F1F2F8", botBg="#E6E9F4" }) {
   const uid=topBg.replace("#","t")+botBg.replace("#","b");
   return (
     <div style={{position:"relative",height:104,overflow:"hidden",background:topBg,flexShrink:0}}>
-      <svg width="100%" viewBox="0 0 1400 104" preserveAspectRatio="xMidYMid slice" style={{position:"absolute",inset:0,display:"block"}}>
+      <svg width="100%" height="100%" viewBox="0 0 1400 104" preserveAspectRatio="xMidYMid slice" style={{position:"absolute",inset:0,display:"block",width:"100%",height:"100%"}}>
         <defs>
           <linearGradient id={`sd${uid}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={topBg} stopOpacity="1"/>
@@ -195,6 +215,12 @@ const FORMSPREE = {
   VOLUNTEER: "https://formspree.io/f/mvzeowkd",
   CONTACT:   "https://formspree.io/f/mbdnjzoe",
 };
+
+/* Contact + volunteer forms are TEMPORARILY DISABLED until the masjid has an
+   established email address to receive submissions. The forms show a notice
+   instead. Flip this to `true` (and confirm the Formspree endpoints above
+   point at the masjid email) to bring them back. */
+const FORMS_ENABLED = false;
 
 /* ── beehiiv newsletter ────────────────────────────────────────────────────
    FORM_ID is the data-beehiiv-form id from the embed snippet beehiiv
@@ -299,7 +325,7 @@ function Calendar({ events }) {
   const isTod=d=>d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();
 
   return (
-    <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",border:"1px solid rgba(90,107,176,.2)",borderRadius:18,overflow:"hidden",boxShadow:"0 8px 48px rgba(16,23,58,.1)"}}>
+    <div className="resp-cal" style={{display:"grid",gridTemplateColumns:"3fr 2fr",border:"1px solid rgba(90,107,176,.2)",borderRadius:18,overflow:"hidden",boxShadow:"0 8px 48px rgba(16,23,58,.1)"}}>
       <div style={{background:"#FAFAFE"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 22px",borderBottom:"1px solid rgba(90,107,176,.1)"}}>
           <button onClick={()=>setView(new Date(y,m-1,1))} style={{width:32,height:32,borderRadius:"50%",border:"none",background:"none",cursor:"pointer",fontSize:18,color:"#34407A",display:"flex",alignItems:"center",justifyContent:"center"}}
@@ -386,6 +412,7 @@ export default function ICTExoma() {
   const [prayers, setPrayers]=useState(DEFAULT_PRAYERS);
   const [dAmt,    setDAmt]   =useState("$50");
   const [donateOpen,setDonateOpen]=useState(false);
+  const [menuOpen,setMenuOpen]=useState(false);
   const beehiivRef=useRef(null);
 
   const [volData,setVolData]=useState({firstName:"",lastName:"",email:"",phone:"",availability:"",interests:[],message:""});
@@ -483,7 +510,7 @@ export default function ICTExoma() {
 
       {/* NAV */}
       <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:200,height:96,padding:"0 5%",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(241,242,248,.96)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(90,107,176,.13)",boxShadow:"0 1px 32px rgba(16,23,58,.06)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:28,flex:1,justifyContent:"flex-start"}}>
+        <div className="nav-links" style={{display:"flex",alignItems:"center",gap:28,flex:1,justifyContent:"flex-start"}}>
           {["about","services"].map(s=>(
             <button key={s} onClick={()=>go(s)} className="nav-link"
               style={{background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"'Jost',sans-serif",color:"rgba(26,31,56,.6)",letterSpacing:".06em",padding:"2px 0",transition:"color .3s"}}>
@@ -497,7 +524,7 @@ export default function ICTExoma() {
             <img src={`${import.meta.env.BASE_URL}ict_logo5.png`} alt="ICT Logo" style={{width:90,height:118,objectFit:"contain"}}/>
           </button>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:28,flex:1,justifyContent:"flex-end"}}>
+        <div className="nav-links" style={{display:"flex",alignItems:"center",gap:28,flex:1,justifyContent:"flex-end"}}>
           {["events","volunteer","contact"].map(s=>(
             <button key={s} onClick={()=>go(s)} className="nav-link"
               style={{background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"'Jost',sans-serif",color:"rgba(26,31,56,.6)",letterSpacing:".06em",padding:"2px 0",transition:"color .3s"}}>
@@ -508,14 +535,34 @@ export default function ICTExoma() {
             onMouseOver={e=>e.currentTarget.style.background="#DCC07A"}
             onMouseOut={e=>e.currentTarget.style.background="#C9A85C"}>Donate</button>
         </div>
+        {/* Mobile hamburger (shown ≤860px via .nav-burger) */}
+        <button className="nav-burger" aria-label="Menu" aria-expanded={menuOpen} onClick={()=>setMenuOpen(o=>!o)}
+          style={{position:"absolute",right:"5%",top:"50%",transform:"translateY(-50%)",zIndex:260,background:"none",border:"none",cursor:"pointer",padding:8,flexDirection:"column",gap:5}}>
+          <span style={{display:"block",width:24,height:2,borderRadius:2,background:"#1A1F38",transition:"transform .25s",transform:menuOpen?"translateY(7px) rotate(45deg)":"none"}}/>
+          <span style={{display:"block",width:24,height:2,borderRadius:2,background:"#1A1F38",transition:"opacity .2s",opacity:menuOpen?0:1}}/>
+          <span style={{display:"block",width:24,height:2,borderRadius:2,background:"#1A1F38",transition:"transform .25s",transform:menuOpen?"translateY(-7px) rotate(-45deg)":"none"}}/>
+        </button>
       </nav>
+
+      {/* Mobile menu (shown ≤860px when open) */}
+      {menuOpen && (
+        <div className="nav-mobile-menu" style={{position:"fixed",top:96,left:0,right:0,zIndex:190,flexDirection:"column",background:"rgba(241,242,248,.98)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(90,107,176,.13)",boxShadow:"0 12px 32px rgba(16,23,58,.1)",padding:"10px 5% 18px"}}>
+          {["about","services","events","volunteer","contact"].map(s=>(
+            <button key={s} onClick={()=>{ go(s); setMenuOpen(false); }}
+              style={{background:"none",border:"none",cursor:"pointer",textAlign:"left",fontSize:15,fontFamily:"'Jost',sans-serif",color:"rgba(26,31,56,.7)",letterSpacing:".04em",padding:"13px 4px",borderBottom:"1px solid rgba(90,107,176,.1)"}}>
+              {s[0].toUpperCase()+s.slice(1)}
+            </button>
+          ))}
+          <button onClick={()=>{ go("donate"); setMenuOpen(false); }} style={bGold({padding:"13px",marginTop:14})}>Donate</button>
+        </div>
+      )}
 
       {/* HERO */}
       <section id="hero" style={{minHeight:"100vh",paddingTop:64,position:"relative",overflow:"hidden",display:"flex",alignItems:"center"}}>
         <div style={{position:"absolute",inset:0,zIndex:0,backgroundImage:`url('${import.meta.env.BASE_URL}masjid.png')`,backgroundSize:"cover",backgroundPosition:"center 60%"}}/>
         <div style={{position:"absolute",inset:0,zIndex:1,background:"linear-gradient(160deg,rgba(7,11,30,.92) 0%,rgba(16,23,58,.85) 45%,rgba(52,64,122,.55) 100%)"}}/>
         <HeroSky/>
-        <div style={{maxWidth:1140,margin:"0 auto",padding:"80px 5%",position:"relative",zIndex:4,width:"100%"}}>
+        <div className="hero-inner" style={{maxWidth:1140,margin:"0 auto",padding:"80px 5%",position:"relative",zIndex:4,width:"100%"}}>
           <div className="reveal" style={{maxWidth:600}}>
             <span style={{fontFamily:'"Scheherazade New",serif',fontSize:28,color:"rgba(230,215,162,.82)",display:"block",marginBottom:22,lineHeight:1.7}}>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>
             <span style={{...tag,color:"rgba(196,204,230,.65)",display:"block",marginBottom:14,fontSize:10}}>Sherman · Denison · Texoma Region</span>
@@ -583,7 +630,7 @@ export default function ICTExoma() {
           <ellipse cx={700} cy={510} rx={310} ry={115} fill="#34407A" opacity={0.035}/>
         </svg>
         <CornerStars side="right" op={0.5}/>
-        <div style={{maxWidth:1140,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1.1fr",gap:80,alignItems:"start",position:"relative",zIndex:2}}>
+        <div className="resp-2col" style={{maxWidth:1140,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1.1fr",gap:80,alignItems:"start",position:"relative",zIndex:2}}>
           <div className="reveal-left">
             <span style={tag}>Our Story</span>
             <h2 style={{...h2,fontSize:"clamp(36px,4.5vw,56px)",margin:"10px 0"}}>
@@ -622,7 +669,7 @@ export default function ICTExoma() {
             </h2>
           </div>
           {SERVICES.map((s,i)=>(
-            <div key={s.n} className="svc-row reveal" style={{transitionDelay:`${i*.07}s`,padding:"28px 0",display:"grid",gridTemplateColumns:"72px 220px 1fr",gap:32,alignItems:"baseline"}}>
+            <div key={s.n} className="svc-row reveal resp-svc" style={{transitionDelay:`${i*.07}s`,padding:"28px 0",display:"grid",gridTemplateColumns:"72px 220px 1fr",gap:32,alignItems:"baseline"}}>
               <span style={{fontFamily:'"Cormorant Garamond",serif',fontSize:"3rem",color:"rgba(90,107,176,.25)",lineHeight:1,fontWeight:300}}>{s.n}</span>
               <h3 style={{fontFamily:'"Cormorant Garamond",serif',fontSize:22,fontWeight:400,color:"#1A1F38",lineHeight:1.35}}>{s.title}</h3>
               <p style={{fontSize:14.5,fontWeight:300,color:"rgba(26,31,56,.55)",lineHeight:1.92}}>{s.body}</p>
@@ -676,7 +723,7 @@ export default function ICTExoma() {
               Volunteer <em style={{fontStyle:"italic",color:"#34407A"}}>with us</em>
             </h2>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1.3fr",gap:64}}>
+          <div className="resp-2col" style={{display:"grid",gridTemplateColumns:"1fr 1.3fr",gap:64}}>
             <div className="reveal-left">
               <div style={bar}/>
               <p style={{...body,marginBottom:22}}>Our community runs on the generosity of volunteers. Whether you have an hour a month or a few hours a week, there's a place for you — tell us where your interests lie and we'll be in touch.</p>
@@ -690,26 +737,28 @@ export default function ICTExoma() {
               ))}
             </div>
             <div className="reveal-right" style={{transitionDelay:".1s"}}>
-              {volStatus==="success"
+              {!FORMS_ENABLED
+                ? <div style={{background:"#FAFAFE",border:"1px solid rgba(90,107,176,.2)",borderRadius:14,padding:"40px 30px",textAlign:"center"}}>
+                    <p style={{fontFamily:'"Cormorant Garamond",serif',fontSize:22,color:"#34407A",marginBottom:10}}>Volunteer sign-up coming soon</p>
+                    <p style={{fontSize:14,color:"rgba(26,31,56,.55)",fontWeight:300,lineHeight:1.7}}>We don't yet have an established masjid email to receive submissions, so this form is temporarily paused. Please check back soon, in shā' Allah — and jazakum Allahu khayran for your willingness to serve.</p>
+                  </div>
+                : volStatus==="success"
                 ? <div style={{background:"#FAFAFE",border:"1px solid rgba(90,107,176,.2)",borderRadius:14,padding:"40px 30px",textAlign:"center"}}>
                     <p style={{fontFamily:'"Cormorant Garamond",serif',fontSize:24,color:"#34407A",marginBottom:8}}>Jazakum Allahu Khayran</p>
                     <p style={{fontSize:14,color:"rgba(26,31,56,.55)",fontWeight:300}}>Your interest has been received — we'll reach out soon.</p>
                   </div>
                 : <form onSubmit={submitVolunteer} style={{display:"flex",flexDirection:"column",gap:12}}>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div className="resp-2fields" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                       <div><label style={lbL}>First name</label><input required type="text" placeholder="Your name" value={volData.firstName} onChange={e=>setVolData(v=>({...v,firstName:e.target.value}))} style={iL}/></div>
                       <div><label style={lbL}>Last name</label><input type="text" placeholder="Last name" value={volData.lastName} onChange={e=>setVolData(v=>({...v,lastName:e.target.value}))} style={iL}/></div>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div className="resp-2fields" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                       <div><label style={lbL}>Email</label><input required type="email" placeholder="you@email.com" value={volData.email} onChange={e=>setVolData(v=>({...v,email:e.target.value}))} style={iL}/></div>
                       <div><label style={lbL}>Phone</label><input type="tel" placeholder="(XXX) XXX-XXXX" value={volData.phone} onChange={e=>setVolData(v=>({...v,phone:e.target.value}))} style={iL}/></div>
                     </div>
                     <div>
                       <label style={lbL}>Availability</label>
-                      <select value={volData.availability} onChange={e=>setVolData(v=>({...v,availability:e.target.value}))} style={{...iL,cursor:"pointer"}}>
-                        <option value="">Select one</option>
-                        {["Weekday mornings","Weekday evenings","Weekends","Flexible / anytime"].map(o=><option key={o}>{o}</option>)}
-                      </select>
+                      <input type="text" placeholder="e.g. Weekday evenings & Saturday mornings" value={volData.availability} onChange={e=>setVolData(v=>({...v,availability:e.target.value}))} style={iL}/>
                     </div>
                     <div>
                       <label style={lbL}>Areas of interest</label>
@@ -756,7 +805,7 @@ export default function ICTExoma() {
             <Dot key={i} cx={x} cy={y} r={1.8} color="#C4CCE6" op={0.55} cls={["tw1","tw2","tw3"][i%3]}/>
           ))}
         </svg>
-        <div style={{maxWidth:1140,margin:"0 auto",position:"relative",zIndex:2,display:"grid",gridTemplateColumns:"1fr 1fr",gap:80,alignItems:"start"}}>
+        <div className="resp-2col" style={{maxWidth:1140,margin:"0 auto",position:"relative",zIndex:2,display:"grid",gridTemplateColumns:"1fr 1fr",gap:80,alignItems:"start"}}>
           <div className="reveal-left">
             <span style={{...tag,color:"rgba(230,215,162,.75)"}}>Support our mission</span>
             <h2 style={{...h2d,fontSize:"clamp(36px,4.5vw,56px)",margin:"10px 0"}}>
@@ -825,12 +874,12 @@ export default function ICTExoma() {
               Get in <em style={{fontStyle:"italic",color:"#34407A"}}>touch</em>
             </h2>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1.3fr",gap:64}}>
+          <div className="resp-2col" style={{display:"grid",gridTemplateColumns:"1fr 1.3fr",gap:64}}>
             <div className="reveal-left">
               {[
                 {l:"Address",      v:<>6544 FM1417<br/>Denison, TX 75090</>},
                 {l:"Phone",        v:"(XXX) XXX-XXXX"},
-                {l:"Email",        v:"info@ictexoma.org"},
+                {l:"Email",        v:"Coming soon, in shā’ Allah"},
                 {l:"Office Hours", v:<>Mon–Fri: 10 AM – 5 PM<br/>Sat: 9 AM – 2 PM<br/>Masjid open for Isha prayers daily, and Jummah prayers weekly</>},
               ].map(d=>(
                 <div key={d.l} style={{marginBottom:26}}>
@@ -853,13 +902,18 @@ export default function ICTExoma() {
               </div>
             </div>
             <div className="reveal-right" style={{transitionDelay:".1s"}}>
-              {ctcStatus==="success"
+              {!FORMS_ENABLED
+                ? <div style={{background:"#FAFAFE",border:"1px solid rgba(90,107,176,.2)",borderRadius:14,padding:"40px 30px",textAlign:"center"}}>
+                    <p style={{fontFamily:'"Cormorant Garamond",serif',fontSize:22,color:"#34407A",marginBottom:10}}>Contact form coming soon</p>
+                    <p style={{fontSize:14,color:"rgba(26,31,56,.55)",fontWeight:300,lineHeight:1.7}}>The Islamic Center of Texoma doesn't yet have an established email address to receive messages, so our contact form is temporarily unavailable. Please check back soon, in shā' Allah — you're always welcome to visit us at the masjid in the meantime.</p>
+                  </div>
+                : ctcStatus==="success"
                 ? <div style={{background:"#FAFAFE",border:"1px solid rgba(90,107,176,.2)",borderRadius:14,padding:"40px 30px",textAlign:"center"}}>
                     <p style={{fontFamily:'"Cormorant Garamond",serif',fontSize:24,color:"#34407A",marginBottom:8}}>Message sent</p>
                     <p style={{fontSize:14,color:"rgba(26,31,56,.55)",fontWeight:300}}>Thank you for reaching out — we'll get back to you soon, in shā’ Allah.</p>
                   </div>
                 : <form onSubmit={submitContact} style={{display:"flex",flexDirection:"column",gap:12}}>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div className="resp-2fields" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                       <div><label style={lbL}>First Name</label><input type="text" placeholder="Your name" value={ctcData.firstName} onChange={e=>setCtcData(c=>({...c,firstName:e.target.value}))} style={iL}/></div>
                       <div><label style={lbL}>Last Name</label><input type="text" placeholder="Last name" value={ctcData.lastName} onChange={e=>setCtcData(c=>({...c,lastName:e.target.value}))} style={iL}/></div>
                     </div>
@@ -896,7 +950,7 @@ export default function ICTExoma() {
           ))}
         </svg>
         <div style={{maxWidth:1140,margin:"0 auto",position:"relative",zIndex:1}}>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:48,paddingBottom:36,borderBottom:"1px solid rgba(241,242,248,.05)",marginBottom:24}}>
+          <div className="resp-foot" style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:48,paddingBottom:36,borderBottom:"1px solid rgba(241,242,248,.05)",marginBottom:24}}>
             <div>
               <span style={{fontFamily:'"Scheherazade New",serif',fontSize:22,color:"#E6D7A2",display:"block",marginBottom:10}}>بِسْمِ ٱللَّهِ</span>
               <p style={{fontFamily:'"Cormorant Garamond",serif',fontSize:17,color:"rgba(241,242,248,.42)",marginBottom:10,fontStyle:"italic"}}>Islamic Center of Texoma</p>
